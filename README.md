@@ -1,68 +1,125 @@
 *This project has been created as part of the 42 curriculum.*
 
-Get Next Line
-Description
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=0:0B1419,50:1A3A4A,100:2E6F7C&text=Get%20Next%20Line&fontColor=E8F1F2&fontSize=54&fontAlignY=40&desc=Read%20a%20file%20descriptor%2C%20one%20line%20at%20a%20time&descAlignY=62&descSize=15" width="100%" alt="GNL banner"/>
+</p>
 
-Get Next Line is a project from the 42 curriculum. The goal is to create a function that reads a file descriptor one line at a time.
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1200&color=7EC8C9&center=true&vCenter=true&width=560&lines=read()+%2B+static+storage;BUFFER_SIZE+tunable;One+line+per+call" alt="typing animation"/>
+</p>
 
-Each call returns the next line, including the newline character when present. The function must also handle the end of a file, even when the last line does not end with a newline.
+<p align="center">
+  <img src="https://img.shields.io/badge/42-COMMON%20CORE-0B1419?style=for-the-badge" alt="42"/>
+  <img src="https://img.shields.io/badge/LANGUAGE-C-1A3A4A?style=for-the-badge&logo=c&logoColor=7EC8C9" alt="C"/>
+  <img src="https://img.shields.io/badge/BUFFER__SIZE-configurable-2E6F7C?style=for-the-badge" alt="BUFFER_SIZE"/>
+  <img src="https://img.shields.io/badge/FLAGS--Wall%20--Wextra%20--Werror-111111?style=for-the-badge" alt="Flags"/>
+</p>
 
-This project introduces several C programming concepts, such as file descriptors, static variables, dynamic memory allocation and buffer management.
+---
 
-Instructions
-Compilation
+## Description
 
-The project can be compiled using cc with the following flags:
+**Get Next Line** returns the next line from a file descriptor on every call.
 
--Wall
--Wextra
--Werror
+It must work for any valid `BUFFER_SIZE`, keep leftover bytes between calls, and handle EOF correctly — including a last line without a trailing newline.
 
-The BUFFER_SIZE macro can be defined during compilation to determine how many bytes are read at a time.
+**Concepts covered:** file descriptors · `static` variables · dynamic allocation · buffer management
 
-The project consists of three files:
+---
 
-get_next_line.c
-get_next_line_utils.c
-get_next_line.h
-Usage
+## Instructions
 
-Include get_next_line.h in your program and call get_next_line() with a valid file descriptor.
+### Build
 
-The returned line must be freed after use to avoid memory leaks.
+```bash
+make        # build get_next_line.a
+make clean
+make fclean
+make re
+```
 
-Algorithm
+Custom buffer size:
 
-The algorithm uses a static variable to preserve unread data between function calls.
+```bash
+cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 \
+  get_next_line.c get_next_line_utils.c your_main.c -o gnl
+```
 
-Reading: Data is read from the file descriptor in chunks using read(), with the size determined by BUFFER_SIZE.
-Storage: The read data is appended to a static variable so that previously read characters are not lost.
-Line extraction: When a newline character is found, the first complete line is extracted and returned.
-Persistence: Any remaining characters are preserved for the next call.
-End of file: If EOF is reached, the remaining characters are returned as the final line. If no data remains, the function returns NULL.
-Algorithm choice
+### Usage
 
-This approach avoids reading the entire file into memory and allows the function to process large files progressively.
+```c
+#include "get_next_line.h"
 
-Using a static variable ensures that unread data remains available between calls. The buffer-based approach also makes the function adaptable to different BUFFER_SIZE values.
+char *line;
 
-Project Structure
-get_next_line.c: Main function and reading algorithm.
-get_next_line_utils.c: Helper functions for string manipulation.
-get_next_line.h: Function prototypes and definitions.
-README.md: Project documentation.
-Resources
-Documentation
-read() - Linux Manual
-malloc() - Linux Manual
-free() - Linux Manual
-C Documentation - cppreference
-AI Usage
+line = get_next_line(fd);
+while (line)
+{
+    /* use line */
+    free(line);
+    line = get_next_line(fd);
+}
+```
 
-ChatGPT was used exclusively to write and structure this README file, including organizing the sections and improving the documentation.
+> Always `free()` the returned line.
 
-No AI tools were used for coding, debugging, or implementing the project. The entire source code was written independently.
+---
 
-Conclusion
+## How it works
 
-Get Next Line provides a practical introduction to file handling in C, static variables, dynamic memory allocation and buffer management. It helps develop a better understanding of how data can be read and processed efficiently.
+```text
+┌─────────────┐     read()      ┌──────────────┐
+│  File / FD  │ ─────────────── │ static stash │
+└─────────────┘   BUFFER_SIZE   └──────┬───────┘
+                                       │
+                              newline found?
+                                       │
+                          ┌────────────┴────────────┐
+                          ▼                         ▼
+                     return line              keep remainder
+                     (+ '\n' if any)          for next call
+```
+
+1. **Read** chunks with `read()` into a stash  
+2. **Append** until a `\n` appears (or EOF)  
+3. **Extract** the complete line and return it  
+4. **Keep** leftover bytes in a `static` buffer for the next call  
+5. At EOF with no data left → return `NULL`
+
+This streams large files without loading everything into memory.
+
+---
+
+## Project structure
+
+```text
+gnl/
+├── get_next_line.c
+├── get_next_line_utils.c
+├── get_next_line.h
+├── Makefile
+└── README.md
+```
+
+---
+
+## Resources
+
+- [read(2) — Linux man page](https://man7.org/linux/man-pages/man2/read.2.html)
+- [malloc(3) / free(3)](https://man7.org/linux/man-pages/man3/malloc.3.html)
+- [C memory management — cppreference](https://en.cppreference.com/w/c/memory)
+
+---
+
+## AI usage
+
+AI tools were used only to help structure and polish this README  
+(sections, wording, formatting).
+
+No AI was used to write, debug, or implement the project source code.
+
+---
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0B1419,50:1A3A4A,100:2E6F7C&height=100&section=footer" width="100%" alt="footer"/>
+</p>
